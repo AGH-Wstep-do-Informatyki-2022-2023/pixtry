@@ -46,3 +46,13 @@ Then the third part of the story begins. Derek wakes up in a prison cell. Then h
 ## Game tone and coloring
 
 The goal for us is to create kind of *horror* game. It is kept mostly in dark colors (to keep right vibe). Simple 2D game with some interesting mechanics. **Stay tuned for updates**
+
+## Main game design 
+
+<p> 
+  The Main game design will be have a similar vibe as a indie games such as Five Night at Freddy's etc 2D. But it's not like that massive and it will     have story telling and mystery solving mechanics. Also have a player dependable different endings and have three different playable mini-games inside.
+</p>
+
+  
+
+
