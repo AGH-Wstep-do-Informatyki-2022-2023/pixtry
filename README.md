@@ -30,4 +30,4 @@ After the chip was installed, Derek wakes up in a room with hospital equipment a
 
 ## Game tone and coloring
 
-The goal for us is to create kind of *horror* game. It is kept mostly in dark colors (to keep right vibe). Simple 2D game with some interesting mechanics. **Stay tuned**
+The goal for us is to create kind of *horror* game. It is kept mostly in dark colors (to keep right vibe). Simple 2D game with some interesting mechanics. **Stay tuned for updates**
