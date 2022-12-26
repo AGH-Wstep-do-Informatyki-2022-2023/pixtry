@@ -1,5 +1,4 @@
 import pygame
-from pygame.locals import *
 
 pygame.init()
 
@@ -19,12 +18,14 @@ tile_size = 40
 #load images
 bg_img = pygame.image.load('img/bg.png')
 
+#creating black lines (better to use than pixels)
 def draw_grid():
 	for line in range(0, int(screen_width/tile_size)):
 		pygame.draw.line(screen, 'black', (line * tile_size, 0), (line * tile_size, screen_height))
 	for line in range(0, int(screen_height/tile_size)):
 		pygame.draw.line(screen, 'black', (0, line * tile_size), (screen_width, line * tile_size))
 
+#in world we display every block, that we can collide/interact with
 class World():
 	def __init__(self, data):
 		self.tile_list = []
@@ -43,6 +44,9 @@ class World():
 					img_rect.y = row_count * tile_size
 					tile = (img, img_rect)
 					self.tile_list.append(tile)
+				elif tile == 2:
+					door=Door(col_count*tile_size, row_count*tile_size)
+					door_group.add(door)
 				col_count += 1
 			row_count += 1
 
@@ -50,6 +54,7 @@ class World():
 		for tile in self.tile_list:
 			screen.blit(tile[0], tile[1])
 
+#player class has everything that our player need, moving, jumping interacting with objects...
 class Player():
 	def __init__(self, x, y):
 		img = pygame.image.load('img/guy.png')
@@ -69,10 +74,8 @@ class Player():
 		#get keypresses
 		key = pygame.key.get_pressed()
 		if key[pygame.K_SPACE] and not self.jumped:
-			self.vel_y = -15
+			self.vel_y = -20
 			self.jumped = True
-		'''if not key[pygame.K_SPACE]:
-			self.jumped = False'''
 		if key[pygame.K_LEFT]:
 			dx -= 5
 		if key[pygame.K_RIGHT]:
@@ -90,7 +93,6 @@ class Player():
 			# check for collision in x direction
 			if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
 				dx = 0
-				self.jumped = False
 			# check for collision in y direction
 			if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
 				self.jumped = False
@@ -102,50 +104,73 @@ class Player():
 				elif self.vel_y >= 0:
 					dy = tile[1].top - self.rect.bottom
 					self.vel_y = 0
+
 		#update player coordinates
 		self.rect.x += dx
 		self.rect.y += dy
 
+		#making sure, that player won't disappear
 		if self.rect.bottom > screen_height-40:
 			self.rect.bottom = screen_height-40
 			dy = 0
+		if self.rect.right >= 1280:
+			self.rect.right=1280
+			dx=0
+		if self.rect.left <= 0:
+			self.rect.left=0
+			dx=0
 
 		#draw player onto screen
 		screen.blit(self.image, self.rect)
 
+#class with our doors
+class Door(pygame.sprite.Sprite):
+	def __init__(self, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		img = pygame.image.load('img/doors.png')
+		self.image = pygame.transform.scale(img, (tile_size*3, tile_size*5))
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
+
+#for now it's our "room nr 1" it will be much more rooms
 world_data = [
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
+#objects of our classes
 
-world = World(world_data)
 player=Player(80, 200)
+door_group=pygame.sprite.Group()
+world = World(world_data)
 
 run = True
 while run:
 	clock.tick(fps)
-	screen.blit(bg_img, (0, 0))
 
+	#displaying everything
+	screen.blit(bg_img, (0, 0))
 	world.draw()
+	door_group.draw(screen)
 	player.update()
-	draw_grid()
+	draw_grid() #you can comment it to remove those black lines
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
