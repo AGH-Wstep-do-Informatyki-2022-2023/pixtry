@@ -1,4 +1,7 @@
+import time
+
 import pygame
+from os import path
 
 pygame.init()
 
@@ -13,6 +16,8 @@ pygame.display.set_caption('All saints of me')
 
 #define game variables
 tile_size = 40
+room=0
+max_room=1
 
 
 #load images
@@ -25,7 +30,21 @@ def draw_grid():
 	for line in range(0, int(screen_height/tile_size)):
 		pygame.draw.line(screen, 'black', (0, line * tile_size), (screen_width, line * tile_size))
 
-#in world we display every block, that we can collide/interact with
+#resetting room, to create new room
+def reset_room(room):
+	player.reset(100, screen_height - 130)
+	door_group.empty()
+	backdoor_group.empty()
+
+	# load in room and create world
+	if path.exists(f'rooms/room_{room}'):
+		with open(f'rooms/room_{room}', 'r') as f:
+			world_data = [list(line.strip()) for line in f.readlines()]
+	world = World(world_data)
+
+	return world
+
+#in world, we display every block, that we can collide/interact with
 class World():
 	def __init__(self, data):
 		self.tile_list = []
@@ -37,6 +56,7 @@ class World():
 		for row in data:
 			col_count = 0
 			for tile in row:
+				tile=int(tile)
 				if tile == 1:
 					img = pygame.transform.scale(dirt_img, (tile_size, tile_size))
 					img_rect = img.get_rect()
@@ -47,6 +67,9 @@ class World():
 				elif tile == 2:
 					door=Door(col_count*tile_size, row_count*tile_size)
 					door_group.add(door)
+				elif tile == 3:
+					bdoor=BackDoor(col_count*tile_size, row_count*tile_size)
+					backdoor_group.add(bdoor)
 				col_count += 1
 			row_count += 1
 
@@ -57,19 +80,12 @@ class World():
 #player class has everything that our player need, moving, jumping interacting with objects...
 class Player():
 	def __init__(self, x, y):
-		img = pygame.image.load('img/guy.png')
-		self.image = pygame.transform.scale(img, (80, 160))
-		self.width=self.image.get_width()
-		self.height=self.image.get_height()
-		self.rect = self.image.get_rect()
-		self.rect.x = x
-		self.rect.y = y
-		self.vel_y = 0
-		self.jumped = False
+		self.reset(x,y)
 
 	def update(self):
 		dx = 0
 		dy = 0
+		nextRoom=0
 
 		#get keypresses
 		key = pygame.key.get_pressed()
@@ -80,8 +96,12 @@ class Player():
 			dx -= 5
 		if key[pygame.K_RIGHT]:
 			dx += 5
-
-
+		if key[pygame.K_e] and pygame.sprite.spritecollide(self, door_group, False):
+			nextRoom = 1
+			time.sleep(0.2)
+		if key[pygame.K_e] and pygame.sprite.spritecollide(self, backdoor_group, False):
+			nextRoom = -1
+			time.sleep(0.2)
 		#add gravity
 		self.vel_y += 1
 		if self.vel_y > 10:
@@ -123,6 +143,19 @@ class Player():
 		#draw player onto screen
 		screen.blit(self.image, self.rect)
 
+		return nextRoom
+
+	def reset(self, x, y):
+		img = pygame.image.load('img/guy.png')
+		self.image = pygame.transform.scale(img, (80, 160))
+		self.width = self.image.get_width()
+		self.height = self.image.get_height()
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
+		self.vel_y = 0
+		self.jumped = False
+
 #class with our doors
 class Door(pygame.sprite.Sprite):
 	def __init__(self, x, y):
@@ -133,32 +166,26 @@ class Door(pygame.sprite.Sprite):
 		self.rect.x = x
 		self.rect.y = y
 
-#for now it's our "room nr 1" it will be much more rooms
-world_data = [
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-]
+#class to backdoors
+class BackDoor(pygame.sprite.Sprite):
+	def __init__(self, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		img = pygame.image.load('img/backdoors.png')
+		self.image = pygame.transform.scale(img, (tile_size*3, tile_size*5))
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
 
 #objects of our classes
 
 player=Player(80, 200)
 door_group=pygame.sprite.Group()
+backdoor_group=pygame.sprite.Group()
+
+#loading room from file
+if path.exists(f'rooms/room_{room}'):
+	with open(f'rooms/room_{room}', 'r') as f:
+		world_data=[list(line.strip()) for line in f.readlines()]
 world = World(world_data)
 
 run = True
@@ -169,7 +196,32 @@ while run:
 	screen.blit(bg_img, (0, 0))
 	world.draw()
 	door_group.draw(screen)
-	player.update()
+	backdoor_group.draw(screen)
+	nextRoom=player.update()
+
+	#setting new room
+	if nextRoom == 1:
+		# reset game and go to next level
+		prev_room=room
+		room += 1
+		print('door',room, prev_room)
+		if room <= max_room:
+			# reset level
+			world_data = []
+			world = reset_room(room)
+			nextRoom = 0
+		else:
+			quit('Not working')
+			#nextRoom=0
+	elif nextRoom == -1:
+		prev_room=room
+		room-=1
+		print('backdoor',room, prev_room)
+		if room >= 0:
+			world_data=[]
+			world=reset_room(room)
+			nextRoom=0
+
 	draw_grid() #you can comment it to remove those black lines
 
 	for event in pygame.event.get():
