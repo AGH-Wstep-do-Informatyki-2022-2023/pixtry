@@ -18,10 +18,19 @@ pygame.display.set_caption('All saints of me')
 tile_size = 40
 room=0
 max_room=1
+mainMenu=True
 
+#load font
+font = pygame.font.Font('font/Pixeltype.ttf', 72)
+fontMenu = pygame.font.Font('font/Pixeltype.ttf', 100)
 
 #load images
 bg_img = pygame.image.load('img/bg.png')
+
+#draw text
+def draw_text(text, font, text_color, x, y):
+    img = font.render(text, True, text_color)
+    screen.blit(img, (x, y))
 
 #creating black lines (better to use than pixels)
 def draw_grid():
@@ -30,11 +39,15 @@ def draw_grid():
 	for line in range(0, int(screen_height/tile_size)):
 		pygame.draw.line(screen, 'black', (0, line * tile_size), (screen_width, line * tile_size))
 
+#to check what room we have
+def returnRoom(): return room
+
 #resetting room, to create new room
 def reset_room(room):
-	player.reset(100, screen_height - 130)
+	player.reset(80, screen_height - 130)
 	door_group.empty()
 	backdoor_group.empty()
+	patientCard_group.empty()
 
 	# load in room and create world
 	if path.exists(f'rooms/room_{room}'):
@@ -44,6 +57,37 @@ def reset_room(room):
 
 	return world
 
+#with class button we can click on text in main menu
+class Button():
+	def __init__(self,text, font, textColor, x, y):
+		self.font = font
+		self.text = text
+		self.textColor = textColor
+		self.img = self.font.render(self.text, True, self.textColor)
+		self.img_rect=self.img.get_rect()
+		self.img_rect.x = x
+		self.img_rect.y = y
+		self.clicked = False
+	def draw(self):
+		action = False
+
+		# get mouse position
+		pos = pygame.mouse.get_pos()
+
+		# check mouseover and clicked conditions
+		if self.img_rect.collidepoint(pos):
+			if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+				action = True
+				self.clicked = True
+
+		if pygame.mouse.get_pressed()[0] == 0:
+			self.clicked = False
+
+		# draw button
+		screen.blit(self.img, self.img_rect)
+
+		return action
+
 #in world, we display every block, that we can collide/interact with
 class World():
 	def __init__(self, data):
@@ -51,25 +95,36 @@ class World():
 
 		#load images
 		dirt_img = pygame.image.load('img/ground.png')
+		platform_img=pygame.image.load('img/platform.png')
 
 		row_count = 0
 		for row in data:
 			col_count = 0
 			for tile in row:
 				tile=int(tile)
-				if tile == 1:
+				if tile == 1: #floor
 					img = pygame.transform.scale(dirt_img, (tile_size, tile_size))
 					img_rect = img.get_rect()
 					img_rect.x = col_count * tile_size
 					img_rect.y = row_count * tile_size
 					tile = (img, img_rect)
 					self.tile_list.append(tile)
-				elif tile == 2:
+				elif tile == 2: #door +1
 					door=Door(col_count*tile_size, row_count*tile_size)
 					door_group.add(door)
-				elif tile == 3:
+				elif tile == 3: #door -1
 					bdoor=BackDoor(col_count*tile_size, row_count*tile_size)
 					backdoor_group.add(bdoor)
+				elif tile ==4: #platforms (you can jump on it)
+					img = pygame.transform.scale(platform_img, (tile_size, tile_size))
+					img_rect = img.get_rect()
+					img_rect.x = col_count * tile_size
+					img_rect.y = row_count * tile_size
+					tile = (img, img_rect)
+					self.tile_list.append(tile)
+				elif tile == 5:
+					patientCard=PatientCard(col_count*tile_size, row_count*tile_size)
+					patientCard_group.add(patientCard)
 				col_count += 1
 			row_count += 1
 
@@ -81,6 +136,7 @@ class World():
 class Player():
 	def __init__(self, x, y):
 		self.reset(x,y)
+		self.eq=[]
 
 	def update(self):
 		dx = 0
@@ -97,11 +153,19 @@ class Player():
 		if key[pygame.K_RIGHT]:
 			dx += 5
 		if key[pygame.K_e] and pygame.sprite.spritecollide(self, door_group, False):
-			nextRoom = 1
-			time.sleep(0.2)
+			if returnRoom()==1 and 'Patient Card' not in self.eq: #in room 1 we must find patient card
+				print('Get patient Card first')
+			else:
+				nextRoom = 1
+				time.sleep(0.1)
 		if key[pygame.K_e] and pygame.sprite.spritecollide(self, backdoor_group, False):
 			nextRoom = -1
-			time.sleep(0.2)
+			time.sleep(0.1)
+		if key[pygame.K_e] and pygame.sprite.spritecollide(self, patientCard_group, False):
+			self.eq.append('Patient Card')
+			print('Collected Card')
+			patientCard_group.empty()
+
 		#add gravity
 		self.vel_y += 1
 		if self.vel_y > 10:
@@ -176,11 +240,22 @@ class BackDoor(pygame.sprite.Sprite):
 		self.rect.x = x
 		self.rect.y = y
 
+#patient card
+class PatientCard(pygame.sprite.Sprite):
+	def __init__(self, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		img=pygame.image.load('img/patientCard.png')
+		self.image = pygame.transform.scale(img, (tile_size//2, tile_size))
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
+
 #objects of our classes
 
 player=Player(80, 200)
 door_group=pygame.sprite.Group()
 backdoor_group=pygame.sprite.Group()
+patientCard_group=pygame.sprite.Group()
 
 #loading room from file
 if path.exists(f'rooms/room_{room}'):
@@ -188,45 +263,66 @@ if path.exists(f'rooms/room_{room}'):
 		world_data=[list(line.strip()) for line in f.readlines()]
 world = World(world_data)
 
+#create buttons in main menu
+newGameButton=Button('New Game', font, 'black', screen_width//2-100, screen_height//2 - 130)
+continueGameButton=Button('Continue', font, 'black', screen_width//2-100, screen_height//2)
+eqButton=Button('Inventory', font, 'black', screen_width//2-100, screen_height//2 + 130)
+
 run = True
 while run:
 	clock.tick(fps)
 
 	#displaying everything
 	screen.blit(bg_img, (0, 0))
-	world.draw()
-	door_group.draw(screen)
-	backdoor_group.draw(screen)
-	nextRoom=player.update()
 
-	#setting new room
-	if nextRoom == 1:
-		# reset game and go to next level
-		prev_room=room
-		room += 1
-		print('door',room, prev_room)
-		if room <= max_room:
-			# reset level
-			world_data = []
-			world = reset_room(room)
-			nextRoom = 0
-		else:
-			quit('Not working')
-			#nextRoom=0
-	elif nextRoom == -1:
-		prev_room=room
-		room-=1
-		print('backdoor',room, prev_room)
-		if room >= 0:
-			world_data=[]
-			world=reset_room(room)
-			nextRoom=0
+	if mainMenu:
+		if newGameButton.draw():
+			room=0
+			reset_room(room)
+			mainMenu=False
+		if continueGameButton.draw():
+			mainMenu=False
+		if eqButton.draw():
+			#TODO
+			#show eq to player
+			pass
+	else:
+		world.draw()
+		door_group.draw(screen)
+		backdoor_group.draw(screen)
+		patientCard_group.draw(screen)
+		nextRoom=player.update()
 
-	draw_grid() #you can comment it to remove those black lines
+		#setting new room
+		if nextRoom == 1:
+			# reset game and go to next level
+			prev_room=room
+			room += 1
+			print('door',room, prev_room)
+			if room <= max_room:
+				# reset level
+				world_data = []
+				world = reset_room(room)
+				nextRoom = 0
+			else:
+				quit('Not working') #yet
+		elif nextRoom == -1:
+			prev_room=room
+			room-=1
+			print('backdoor',room, prev_room)
+			if room >= 0:
+				world_data=[]
+				world=reset_room(room)
+				nextRoom=0
+
+		draw_grid() #you can comment it to remove those black lines
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			run = False
+		if event.type == pygame.KEYDOWN: #open main menu
+			if event.key==pygame.K_ESCAPE and not mainMenu: mainMenu=True
+			elif event.key==pygame.K_ESCAPE and mainMenu: mainMenu=False
 
 	pygame.display.update()
 
