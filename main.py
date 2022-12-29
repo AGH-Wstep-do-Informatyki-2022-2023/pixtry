@@ -2,12 +2,15 @@ import time
 
 import pygame
 from os import path
+import interactions
 
 pygame.init()
 
+#fps
 clock=pygame.time.Clock()
 fps=60
 
+#res
 screen_width = 1280
 screen_height = 720
 
@@ -19,6 +22,7 @@ tile_size = 40
 room=0
 max_room=1
 mainMenu=True
+inventory=False
 
 #load font
 font = pygame.font.Font('font/Pixeltype.ttf', 72)
@@ -29,8 +33,9 @@ bg_img = pygame.image.load('img/bg.png')
 
 #draw text
 def draw_text(text, font, text_color, x, y):
-    img = font.render(text, True, text_color)
-    screen.blit(img, (x, y))
+	img = font.render(text, True, text_color)
+	img_rect=img.get_rect(midtop=(x,y))
+	screen.blit(img, img_rect)
 
 #creating black lines (better to use than pixels)
 def draw_grid():
@@ -64,9 +69,7 @@ class Button():
 		self.text = text
 		self.textColor = textColor
 		self.img = self.font.render(self.text, True, self.textColor)
-		self.img_rect=self.img.get_rect()
-		self.img_rect.x = x
-		self.img_rect.y = y
+		self.img_rect=self.img.get_rect(midtop=(x,y))
 		self.clicked = False
 	def draw(self):
 		action = False
@@ -110,10 +113,10 @@ class World():
 					tile = (img, img_rect)
 					self.tile_list.append(tile)
 				elif tile == 2: #door +1
-					door=Door(col_count*tile_size, row_count*tile_size)
+					door=interactions.Door(col_count*tile_size, row_count*tile_size)
 					door_group.add(door)
 				elif tile == 3: #door -1
-					bdoor=BackDoor(col_count*tile_size, row_count*tile_size)
+					bdoor=interactions.BackDoor(col_count*tile_size, row_count*tile_size)
 					backdoor_group.add(bdoor)
 				elif tile ==4: #platforms (you can jump on it)
 					img = pygame.transform.scale(platform_img, (tile_size, tile_size))
@@ -123,7 +126,7 @@ class World():
 					tile = (img, img_rect)
 					self.tile_list.append(tile)
 				elif tile == 5:
-					patientCard=PatientCard(col_count*tile_size, row_count*tile_size)
+					patientCard=interactions.PatientCard(col_count*tile_size, row_count*tile_size,1)
 					patientCard_group.add(patientCard)
 				col_count += 1
 			row_count += 1
@@ -154,7 +157,7 @@ class Player():
 			dx += 5
 		if key[pygame.K_e] and pygame.sprite.spritecollide(self, door_group, False):
 			if returnRoom()==1 and 'Patient Card' not in self.eq: #in room 1 we must find patient card
-				print('Get patient Card first')
+				print('Get patient Card first')#change it on later stage to text written on screen
 			else:
 				nextRoom = 1
 				time.sleep(0.1)
@@ -220,35 +223,6 @@ class Player():
 		self.vel_y = 0
 		self.jumped = False
 
-#class with our doors
-class Door(pygame.sprite.Sprite):
-	def __init__(self, x, y):
-		pygame.sprite.Sprite.__init__(self)
-		img = pygame.image.load('img/doors.png')
-		self.image = pygame.transform.scale(img, (tile_size*3, tile_size*5))
-		self.rect = self.image.get_rect()
-		self.rect.x = x
-		self.rect.y = y
-
-#class to backdoors
-class BackDoor(pygame.sprite.Sprite):
-	def __init__(self, x, y):
-		pygame.sprite.Sprite.__init__(self)
-		img = pygame.image.load('img/backdoors.png')
-		self.image = pygame.transform.scale(img, (tile_size*3, tile_size*5))
-		self.rect = self.image.get_rect()
-		self.rect.x = x
-		self.rect.y = y
-
-#patient card
-class PatientCard(pygame.sprite.Sprite):
-	def __init__(self, x, y):
-		pygame.sprite.Sprite.__init__(self)
-		img=pygame.image.load('img/patientCard.png')
-		self.image = pygame.transform.scale(img, (tile_size//2, tile_size))
-		self.rect = self.image.get_rect()
-		self.rect.x = x
-		self.rect.y = y
 
 #objects of our classes
 
@@ -264,29 +238,44 @@ if path.exists(f'rooms/room_{room}'):
 world = World(world_data)
 
 #create buttons in main menu
-newGameButton=Button('New Game', font, 'black', screen_width//2-100, screen_height//2 - 130)
-continueGameButton=Button('Continue', font, 'black', screen_width//2-100, screen_height//2)
-eqButton=Button('Inventory', font, 'black', screen_width//2-100, screen_height//2 + 130)
+newGameButton=Button('New Game', font, 'black', screen_width//2, screen_height//2 - 130)
+continueGameButton=Button('Continue', font, 'black', screen_width//2, screen_height//2)
+eqButton=Button('Inventory', font, 'black', screen_width//2, screen_height//2 + 130)
 
 run = True
 while run:
 	clock.tick(fps)
-
-	#displaying everything
-	screen.blit(bg_img, (0, 0))
-
-	if mainMenu:
+	screen.fill('white')
+	if mainMenu: #main menu
+		draw_text('All saints of me', fontMenu, 'black', screen_width//2, 0)
 		if newGameButton.draw():
 			room=0
-			reset_room(room)
+			world_data = []
+			world = reset_room(room)
+			nextRoom = 0
 			mainMenu=False
+			inventory=False
 		if continueGameButton.draw():
 			mainMenu=False
-		if eqButton.draw():
-			#TODO
-			#show eq to player
-			pass
+			inventory=False
+		if eqButton.draw(): #go to inventory
+			inventory=True
+			mainMenu=False
+	elif not mainMenu and inventory: #el. in inventory
+		if len(player.eq) == 0:
+			draw_text("You don't have anything in your inventory", font, 'black', screen_width // 2, screen_height // 2-100)
+		else:
+			for i in player.eq:
+				if i=='Patient Card':
+					patientCardButton=Button('Patient Card', font, 'black', screen_width//2 - 150, 0)
+					if patientCardButton.draw():
+						pCard=interactions.PatientCard(10*tile_size, 0, 2)
+						patientCard_group.add(pCard)
+						patientCard_group.draw(screen)
+				#here put other things, that you created
 	else:
+		# displaying everything
+		screen.blit(bg_img, (0, 0))
 		world.draw()
 		door_group.draw(screen)
 		backdoor_group.draw(screen)
@@ -321,7 +310,9 @@ while run:
 		if event.type == pygame.QUIT:
 			run = False
 		if event.type == pygame.KEYDOWN: #open main menu
-			if event.key==pygame.K_ESCAPE and not mainMenu: mainMenu=True
+			if event.key==pygame.K_ESCAPE and not mainMenu:
+				mainMenu=True
+				inventory=False
 			elif event.key==pygame.K_ESCAPE and mainMenu: mainMenu=False
 
 	pygame.display.update()
