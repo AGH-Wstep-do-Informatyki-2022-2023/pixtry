@@ -14,13 +14,13 @@ fps=60
 screen_width = 1280
 screen_height = 720
 
-screen = pygame.display.set_mode((screen_width, screen_height))
+screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN)
 pygame.display.set_caption('All saints of me')
 
 #define game variables
 tile_size = 40
 room=0
-max_room=1
+max_room=3
 mainMenu=True
 inventory=False
 
@@ -47,12 +47,18 @@ def draw_grid():
 #to check what room we have
 def returnRoom(): return room
 
+#function to increment room
+def roomPP():
+	global room
+	room+=1
+
 #resetting room, to create new room
 def reset_room(room):
 	player.reset(80, screen_height - 130)
 	door_group.empty()
 	backdoor_group.empty()
 	patientCard_group.empty()
+	sokobanDoor_group.empty()
 
 	# load in room and create world
 	if path.exists(f'rooms/room_{room}'):
@@ -128,6 +134,9 @@ class World():
 				elif tile == 5:
 					patientCard=interactions.PatientCard(col_count*tile_size, row_count*tile_size,1)
 					patientCard_group.add(patientCard)
+				elif tile==6:
+					sokobanDoor=interactions.SokobanDoor(col_count*tile_size, row_count*tile_size)
+					sokobanDoor_group.add(sokobanDoor)
 				col_count += 1
 			row_count += 1
 
@@ -168,6 +177,10 @@ class Player():
 			self.eq.append('Patient Card')
 			print('Collected Card')
 			patientCard_group.empty()
+		if key[pygame.K_e] and pygame.sprite.spritecollide(self, sokobanDoor_group, False):
+			import sokoban.sokoban
+			roomPP()
+			reset_room(room)
 
 		#add gravity
 		self.vel_y += 1
@@ -230,6 +243,7 @@ player=Player(80, 200)
 door_group=pygame.sprite.Group()
 backdoor_group=pygame.sprite.Group()
 patientCard_group=pygame.sprite.Group()
+sokobanDoor_group=pygame.sprite.Group()
 
 #loading room from file
 if path.exists(f'rooms/room_{room}'):
@@ -241,6 +255,7 @@ world = World(world_data)
 newGameButton=Button('New Game', font, 'black', screen_width//2, screen_height//2 - 130)
 continueGameButton=Button('Continue', font, 'black', screen_width//2, screen_height//2)
 eqButton=Button('Inventory', font, 'black', screen_width//2, screen_height//2 + 130)
+quitButton=Button('Quit', font, 'black', screen_width//2, screen_height//2+260)
 
 run = True
 while run:
@@ -261,6 +276,8 @@ while run:
 		if eqButton.draw(): #go to inventory
 			inventory=True
 			mainMenu=False
+		if quitButton.draw():
+			run=False
 	elif not mainMenu and inventory: #el. in inventory
 		if len(player.eq) == 0:
 			draw_text("You don't have anything in your inventory", font, 'black', screen_width // 2, screen_height // 2-100)
@@ -272,6 +289,7 @@ while run:
 						pCard=interactions.PatientCard(10*tile_size, 0, 2)
 						patientCard_group.add(pCard)
 						patientCard_group.draw(screen)
+					else: patientCard_group.empty()
 				#here put other things, that you created
 	else:
 		# displaying everything
@@ -280,6 +298,7 @@ while run:
 		door_group.draw(screen)
 		backdoor_group.draw(screen)
 		patientCard_group.draw(screen)
+		sokobanDoor_group.draw(screen)
 		nextRoom=player.update()
 
 		#setting new room
