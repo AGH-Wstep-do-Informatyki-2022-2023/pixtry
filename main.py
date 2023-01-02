@@ -131,7 +131,7 @@ class World():
 					img_rect.y = row_count * tile_size
 					tile = (img, img_rect)
 					self.tile_list.append(tile)
-				elif tile == 5:
+				elif tile == 5 and 'Patient Card' not in player.eq:
 					patientCard=interactions.PatientCard(col_count*tile_size, row_count*tile_size,1)
 					patientCard_group.add(patientCard)
 				elif tile==6:
@@ -284,7 +284,7 @@ while run:
 		else:
 			for i in player.eq:
 				if i=='Patient Card':
-					patientCardButton=Button('Patient Card', font, 'black', screen_width//2 - 150, 0)
+					patientCardButton=Button('Patient Card', font, 'black', screen_width//2, 0)
 					if patientCardButton.draw():
 						pCard=interactions.PatientCard(10*tile_size, 0, 2)
 						patientCard_group.add(pCard)
