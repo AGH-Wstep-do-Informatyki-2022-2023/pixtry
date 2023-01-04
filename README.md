@@ -7,7 +7,7 @@ Creating game called **All saints of me**.
 <summary>Main character</summary>
 <p>
 
-*Derek Williams* is a chronic criminal who spent his 15 years in prison. He is psychopath who doesn't have any emotions.
+*Derek Williams* a violent criminal.
 
 </p> </details>
 
