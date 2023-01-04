@@ -2,7 +2,7 @@ import pygame
 import sys
 import os
 
-BOX_SIZE=36
+BOX_SIZE=40
 
 PLAYER='@'
 TARGET='.'
@@ -13,6 +13,8 @@ WALL='#'
 
 board= []
 targets= []
+
+count=0
 
 root = os.path.dirname(os.path.abspath(__file__))
 
@@ -60,6 +62,7 @@ def moveDown():
 
 
 def movePlayer(i,j):
+    global count
     row, col = getPlayerPosition()
 
     m, n =i*2, j*2
@@ -95,7 +98,14 @@ def movePlayer(i,j):
 
         else:
             pass
+    count=0
+    for i in range (18):
+        for j in range (32):
+            if board[i][j]==BINGO:
+                count=count+1
 
+def returnCount():
+   return count
 
 def doMove(row, col, i, j):
     board[row+i][col+j]=PLAYER
@@ -136,7 +146,7 @@ def main():
 
     pygame.display.init()
     pygame.display.set_caption("Sokoban")
-    screen = pygame.display.set_mode(getScreenSize(), pygame.FULLSCREEN)
+    screen = pygame.display.set_mode(getScreenSize())
     screen.fill((0,0,0))
 
     while True:
@@ -151,13 +161,17 @@ def main():
                 elif event.key == pygame.K_DOWN:
                      moveDown()
                 elif event.key == pygame.K_ESCAPE:
-                    pygame.event.get()
-                    return
-            elif event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+            elif event.type == pygame.K_ESCAPE:
                 pygame.quit()
-                sys.exit()
+                sys.exit
+        if returnCount()==6:
+            return
 
         drawBoard(screen)
+
+
 
 
 main()
