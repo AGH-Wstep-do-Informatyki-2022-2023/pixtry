@@ -252,17 +252,17 @@ if path.exists(f'rooms/room_{room}'):
 world = World(world_data)
 
 #create buttons in main menu
-newGameButton=Button('New Game', font, 'black', screen_width//2, screen_height//2 - 130)
-continueGameButton=Button('Continue', font, 'black', screen_width//2, screen_height//2)
-eqButton=Button('Inventory', font, 'black', screen_width//2, screen_height//2 + 130)
-quitButton=Button('Quit', font, 'black', screen_width//2, screen_height//2+260)
+newGameButton=Button('New Game', font, 'white', screen_width//2, screen_height//2 - 130)
+continueGameButton=Button('Continue', font, 'white', screen_width//2, screen_height//2)
+eqButton=Button('Inventory', font, 'white', screen_width//2, screen_height//2 + 130)
+quitButton=Button('Quit', font, 'white', screen_width//2, screen_height//2+260)
 
 run = True
 while run:
 	clock.tick(fps)
-	screen.fill('white')
+	screen.fill('black')
 	if mainMenu: #main menu
-		draw_text('All saints of me', fontMenu, 'black', screen_width//2, 0)
+		draw_text('All saints of me', fontMenu, 'white', screen_width//2, 0)
 		if newGameButton.draw():
 			room=0
 			world_data = []
@@ -280,11 +280,11 @@ while run:
 			run=False
 	elif not mainMenu and inventory: #el. in inventory
 		if len(player.eq) == 0:
-			draw_text("You don't have anything in your inventory", font, 'black', screen_width // 2, screen_height // 2-100)
+			draw_text("You don't have anything in your inventory", font, 'white', screen_width // 2, screen_height // 2-100)
 		else:
 			for i in player.eq:
 				if i=='Patient Card':
-					patientCardButton=Button('Patient Card', font, 'black', screen_width//2, 0)
+					patientCardButton=Button('Patient Card', font, 'white', screen_width//2, 0)
 					if patientCardButton.draw():
 						pCard=interactions.PatientCard(10*tile_size, 0, 2)
 						patientCard_group.add(pCard)
@@ -333,6 +333,9 @@ while run:
 				mainMenu=True
 				inventory=False
 			elif event.key==pygame.K_ESCAPE and mainMenu: mainMenu=False
+			elif event.key==pygame.K_i:
+				if inventory: inventory=False
+				else: inventory=True
 
 	pygame.display.update()
 

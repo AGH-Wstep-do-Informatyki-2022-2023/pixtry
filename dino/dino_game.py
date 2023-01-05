@@ -5,14 +5,14 @@ import math
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))  # 1280x720
 
-character = pygame.image.load('graphics/psychopath_derek.png').convert_alpha()  # 520x730
+character = pygame.image.load('dino/graphics/psychopath_derek.png').convert_alpha()  # 520x730
 character = pygame.transform.scale(character, (120, 170))  # 120x170
-background_graveyard_1 = pygame.image.load('graphics/background_1.png').convert_alpha()  # 1863x455
+background_graveyard_1 = pygame.image.load('dino/graphics/background_1.png').convert_alpha()  # 1863x455
 background_graveyard_2 = background_graveyard_1
-ground = pygame.image.load('graphics/ground.png').convert_alpha()  # 1387x180
-grave = pygame.image.load('graphics/grave.png').convert_alpha()  # 800x840
+ground = pygame.image.load('dino/graphics/ground.png').convert_alpha()  # 1387x180
+grave = pygame.image.load('dino/graphics/grave.png').convert_alpha()  # 800x840
 grave = pygame.transform.scale(grave, (100, 105))
-grave_2 = pygame.image.load('graphics/grave.png').convert_alpha()  # 800x840
+grave_2 = pygame.image.load('dino/graphics/grave.png').convert_alpha()  # 800x840
 grave_2 = pygame.transform.scale(grave_2, (100, 105))
 background = pygame.Surface((1280, 720))
 background.fill('grey')
