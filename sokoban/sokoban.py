@@ -145,7 +145,7 @@ def main():
     targets=initTargets()
 
     pygame.display.init()
-    pygame.display.set_caption("Sokoban")
+    #pygame.display.set_caption("Sokoban")
     screen = pygame.display.set_mode(getScreenSize())
     screen.fill((0,0,0))
 
@@ -161,11 +161,9 @@ def main():
                 elif event.key == pygame.K_DOWN:
                      moveDown()
                 elif event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    sys.exit()
-            elif event.type == pygame.K_ESCAPE:
-                pygame.quit()
-                sys.exit
+                    return
+            elif event.type == pygame.QUIT:
+                return
         if returnCount()==6:
             return
 
