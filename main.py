@@ -1,5 +1,4 @@
 import time
-
 import pygame
 from os import path
 import interactions
@@ -14,13 +13,13 @@ fps=60
 screen_width = 1280
 screen_height = 720
 
-screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN)
+screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('All saints of me')
 
 #define game variables
 tile_size = 40
 room=0
-max_room=3
+max_room=5
 mainMenu=True
 inventory=False
 
@@ -59,6 +58,8 @@ def reset_room(room):
 	backdoor_group.empty()
 	patientCard_group.empty()
 	sokobanDoor_group.empty()
+	dinoDoor_group.empty()
+	flappyDoor_group.empty()
 
 	# load in room and create world
 	if path.exists(f'rooms/room_{room}'):
@@ -134,9 +135,15 @@ class World():
 				elif tile == 5 and 'Patient Card' not in player.eq:
 					patientCard=interactions.PatientCard(col_count*tile_size, row_count*tile_size,1)
 					patientCard_group.add(patientCard)
-				elif tile==6:
+				elif tile==6: #play sokoban
 					sokobanDoor=interactions.SokobanDoor(col_count*tile_size, row_count*tile_size)
 					sokobanDoor_group.add(sokobanDoor)
+				elif tile==7: #play dino
+					dinoDoor=interactions.DinoDoor(col_count*tile_size, row_count*tile_size)
+					dinoDoor_group.add(dinoDoor)
+				elif tile==8: #play flappy
+					flappyDoor = interactions.FlappyDoor(col_count * tile_size, row_count * tile_size)
+					flappyDoor_group.add(flappyDoor)
 				col_count += 1
 			row_count += 1
 
@@ -179,6 +186,14 @@ class Player():
 			patientCard_group.empty()
 		if key[pygame.K_e] and pygame.sprite.spritecollide(self, sokobanDoor_group, False):
 			import sokoban.sokoban
+			roomPP()
+			reset_room(room)
+		if key[pygame.K_e] and pygame.sprite.spritecollide(self, dinoDoor_group, False):
+			import dino.dino_game
+			roomPP()
+			reset_room(room)
+		if key[pygame.K_e] and pygame.sprite.spritecollide(self, flappyDoor_group, False):
+			import flappy.flappyBird
 			roomPP()
 			reset_room(room)
 
@@ -244,6 +259,8 @@ door_group=pygame.sprite.Group()
 backdoor_group=pygame.sprite.Group()
 patientCard_group=pygame.sprite.Group()
 sokobanDoor_group=pygame.sprite.Group()
+dinoDoor_group=pygame.sprite.Group()
+flappyDoor_group=pygame.sprite.Group()
 
 #loading room from file
 if path.exists(f'rooms/room_{room}'):
@@ -299,6 +316,8 @@ while run:
 		backdoor_group.draw(screen)
 		patientCard_group.draw(screen)
 		sokobanDoor_group.draw(screen)
+		dinoDoor_group.draw(screen)
+		flappyDoor_group.draw(screen)
 		nextRoom=player.update()
 
 		#setting new room
@@ -323,7 +342,7 @@ while run:
 				world=reset_room(room)
 				nextRoom=0
 
-		draw_grid() #you can comment it to remove those black lines
+		#draw_grid() #you can comment it to remove those black lines
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
