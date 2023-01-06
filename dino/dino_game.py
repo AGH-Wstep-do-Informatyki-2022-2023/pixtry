@@ -86,72 +86,71 @@ def detect_grave_collision(grave_list_inner):
             return grave_collision(player_y_coord, grave_list_x_coord + 55, )
 
 
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                pygame.quit()
-                exit()
 
-    keys = pygame.key.get_pressed()
-    screen.blit(background, (0, 0))
+def main():
+    global background_x_coord, game_speed, ground_x_coord, spawn_countdown, grave_list, jump, jump_count_down, player_y_coord_change, player_y_coord
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return
 
-    background_graveyard_1_rect = background_graveyard_1.get_rect(bottomleft=(background_x_coord, 720))
-    screen.blit(background_graveyard_1, background_graveyard_1_rect)
+        keys = pygame.key.get_pressed()
+        screen.blit(background, (0, 0))
 
-    background_graveyard_2_rect = background_graveyard_2.get_rect(bottomleft=(background_x_coord + 1863, 720))
-    screen.blit(background_graveyard_2, background_graveyard_2_rect)
+        background_graveyard_1_rect = background_graveyard_1.get_rect(bottomleft=(background_x_coord, 720))
+        background_graveyard_2_rect = background_graveyard_2.get_rect(bottomleft=(background_x_coord + 1863, 720))
+        ground_rect = ground.get_rect(bottomleft=(ground_x_coord, 770))
+        ground_2_rect = ground.get_rect(bottomleft=(ground_x_coord + 1387, 770))
+        character_rect = character.get_rect(bottomleft=(100, player_y_coord))
 
-    ground_rect = ground.get_rect(bottomleft=(ground_x_coord, 770))
-    screen.blit(ground, ground_rect)
+        screen.blit(background_graveyard_1, background_graveyard_1_rect)
+        screen.blit(background_graveyard_2, background_graveyard_2_rect)
+        screen.blit(ground, ground_rect)
+        screen.blit(ground, ground_2_rect)
+        screen.blit(character, character_rect)
 
-    ground_2_rect = ground.get_rect(bottomleft=(ground_x_coord + 1387, 770))
-    screen.blit(ground, ground_2_rect)
+        # move of graves and tree background
+        background_x_coord -= game_speed
+        ground_x_coord -= game_speed
 
-    character_rect = character.get_rect(bottomleft=(100, player_y_coord))
-    screen.blit(character, character_rect)
+        if background_x_coord < -1863:
+            background_x_coord = 0
+        if ground_x_coord < -1387:
+            ground_x_coord = 0
 
-    # move of graves and tree background
-    background_x_coord -= game_speed
-    ground_x_coord -= game_speed
+        if spawn_countdown % 60 == 0 and game_speed != 0:
+            spawn_grave()
 
-    if background_x_coord < -1863:
-        background_x_coord = 0
-    if ground_x_coord < -1387:
-        ground_x_coord = 0
+        spawn_countdown += 1
 
-    if spawn_countdown % 60 == 0 and game_speed != 0:
-        spawn_grave()
+        show_grave(grave_list)
+        grave_list = grave_move(grave_list)
+        if detect_grave_collision(grave_list):
+            game_speed = 0
+        # jump
+        if keys[pygame.K_SPACE] and game_speed != 0:
+            jump = 1
 
-    spawn_countdown += 1
+        if jump and game_speed != 0:
+            if jump_count_down < jump_len / 2:
+                jump_count_down += 1
+                player_y_coord_change -= player_acceleration
+                player_y_coord -= player_y_coord_change
+            if jump_count_down == jump_len / 2:
+                player_y_coord_change = 0
+                jump_count_down += 1
+            if jump_len / 2 < jump_count_down < jump_len:
+                jump_count_down += 1
+                player_y_coord_change += player_acceleration
+                player_y_coord += player_y_coord_change
+            if jump_count_down == jump_len:
+                jump = 0
+                jump_count_down = 0
+                player_y_coord_change = player_y_coord_change_base
 
-    show_grave(grave_list)
-    grave_list = grave_move(grave_list)
-    if detect_grave_collision(grave_list):
-        game_speed = 0
-    # jump
-    if keys[pygame.K_SPACE] and game_speed != 0:
-        jump = 1
-
-    if jump and game_speed != 0:
-        if jump_count_down < jump_len / 2:
-            jump_count_down += 1
-            player_y_coord_change -= player_acceleration
-            player_y_coord -= player_y_coord_change
-        if jump_count_down == jump_len / 2:
-            player_y_coord_change = 0
-            jump_count_down += 1
-        if jump_len / 2 < jump_count_down < jump_len:
-            jump_count_down += 1
-            player_y_coord_change += player_acceleration
-            player_y_coord += player_y_coord_change
-        if jump_count_down == jump_len:
-            jump = 0
-            jump_count_down = 0
-            player_y_coord_change = player_y_coord_change_base
-
-    pygame.display.update()
-    game_clock.tick(60)
+        pygame.display.update()
+        game_clock.tick(60)
+main()
