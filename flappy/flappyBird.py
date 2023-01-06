@@ -46,21 +46,21 @@ font=pygame.font.Font('font/Pixeltype.ttf', 50)
 fontGG=pygame.font.Font('font/Pixeltype.ttf', 100)
 
 #surface background
-bg_surf=pygame.image.load('flappy/grafika/bg.png').convert()
+bg_surf=pygame.image.load('grafika/bg.png').convert()
 bg_surf=pygame.transform.scale2x(bg_surf)
 bg_rect=bg_surf.get_rect(center=(width//2,height//2 -125))
 
-ground_surf=pygame.image.load('flappy/grafika/ground.png').convert_alpha()
+ground_surf=pygame.image.load('grafika/ground.png').convert_alpha()
 ground_surf=pygame.transform.smoothscale(ground_surf, (1280,200))
 ground_rect=ground_surf.get_rect(midtop=(width//2, height-150))
 
 #Bird
-bird_surf=pygame.image.load('flappy/grafika/bird.png').convert_alpha()
+bird_surf=pygame.image.load('grafika/bird.png').convert_alpha()
 bird_surf=pygame.transform.smoothscale(bird_surf,(int(48*1.6),int(34*1.8)))
 bird_rect=bird_surf.get_rect(bottomleft=(50,height-225))
 
 #tube
-tube1_surf=pygame.image.load('flappy/grafika/tube.png').convert_alpha()
+tube1_surf=pygame.image.load('grafika/tube.png').convert_alpha()
 tube1_surf=pygame.transform.smoothscale(tube1_surf, (int(60*1.6),int(200*1.8)))
 tube1_rect=tube1_surf.get_rect(midtop=(1280, 300))
 tubes1=[]
@@ -80,65 +80,63 @@ gameName_rect=gameName.get_rect(center=(width//2,height//2-100))
 tube_timer=pygame.USEREVENT+1
 pygame.time.set_timer(tube_timer, 1500)
 
-def main():
-    global tubes1, tubes2, endTime, score
-    gravity=0
-    game_active=False
+gravity=0
+game_active=False
 
-    while True:
-        for event in pygame.event.get():
-            if event.type==pygame.QUIT:
-                return
-            if event.type==pygame.KEYDOWN:
-                if event.key==pygame.K_SPACE  and game_active:
-                    gravity=-13
-                if event.key==pygame.K_SPACE and not game_active:
-                    endTime=pygame.time.get_ticks()//2000
-                    game_active=True
-                    gravity=-13
-            if game_active:
-                if event.type==tube_timer:
-                    x=random.randint(1300,1580)
-                    y=random.randint(height-460,height-100)
-                    tubes1.append(tube1_surf.get_rect(midtop=(x, y)))
-                    tubes2.append(tube2_surf.get_rect(midbottom=(x,y-(150*1.8))))
-
+while True:
+    for event in pygame.event.get():
+        if event.type==pygame.QUIT:
+            pygame.quit()
+            exit()
+        if event.type==pygame.KEYDOWN:
+            if event.key==pygame.K_SPACE  and game_active:
+                gravity=-13
+            if event.key==pygame.K_SPACE and not game_active:
+                endTime=pygame.time.get_ticks()//2000
+                game_active=True
+                gravity=-13
         if game_active:
-            #display bg
-            screen.blit(bg_surf,bg_rect)
+            if event.type==tube_timer:
+                x=random.randint(1300,1580)
+                y=random.randint(height-460,height-100)
+                tubes1.append(tube1_surf.get_rect(midtop=(x, y)))
+                tubes2.append(tube2_surf.get_rect(midbottom=(x,y-(150*1.8))))
 
-            #bird
-            gravity+=0.9
-            bird_rect.y+=gravity
-            screen.blit(bird_surf, bird_rect)
+    if game_active:
+        #display bg
+        screen.blit(bg_surf,bg_rect)
 
-            #tube
-            tubes1, tubes2 = tube_move(tubes1, tubes2)
-            screen.blit(ground_surf, ground_rect)
+        #bird
+        gravity+=0.9
+        bird_rect.y+=gravity
+        screen.blit(bird_surf, bird_rect)
 
-            #score
-            displayScore()
+        #tube
+        tubes1, tubes2 = tube_move(tubes1, tubes2)
+        screen.blit(ground_surf, ground_rect)
 
-            #collisions
-            game_active=collisions(bird_rect, tubes1, tubes2)
+        #score
+        displayScore()
 
+        #collisions
+        game_active=collisions(bird_rect, tubes1, tubes2)
+
+    else:
+        pygame.time.wait(1000)
+        screen.blit(bg_surf, bg_rect)
+        bird_rect.y=175
+        screen.blit(bird_surf, bird_rect)
+        screen.blit(gameName,gameName_rect)
+        screen.blit(ground_surf, ground_rect)
+        gravity=0
+        tubes1.clear()
+        tubes2.clear()
+        if score !=0:
+            scoreM = font.render(f'Your score: {score}', False, 'black')
+            scoreM_rect = scoreM.get_rect(center=(width//2, height-200))
+            screen.blit(scoreM, scoreM_rect)
         else:
-            pygame.time.wait(1000)
-            screen.blit(bg_surf, bg_rect)
-            bird_rect.y=175
-            screen.blit(bird_surf, bird_rect)
-            screen.blit(gameName,gameName_rect)
-            screen.blit(ground_surf, ground_rect)
-            gravity=0
-            tubes1.clear()
-            tubes2.clear()
-            if score !=0:
-                scoreM = font.render(f'Your score: {score}', False, 'black')
-                scoreM_rect = scoreM.get_rect(center=(width//2, height-200))
-                screen.blit(scoreM, scoreM_rect)
-            else:
-                screen.blit(gameM, gameM_rect)
+            screen.blit(gameM, gameM_rect)
 
-        pygame.display.update()
-        clock.tick(60)
-main()
+    pygame.display.update()
+    clock.tick(60)

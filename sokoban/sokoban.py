@@ -161,9 +161,11 @@ def main():
                 elif event.key == pygame.K_DOWN:
                      moveDown()
                 elif event.key == pygame.K_ESCAPE:
-                    return
-            elif event.type == pygame.QUIT:
-                return
+                    pygame.quit()
+                    sys.exit()
+            elif event.type == pygame.K_ESCAPE:
+                pygame.quit()
+                sys.exit
         if returnCount()==6:
             return
 
