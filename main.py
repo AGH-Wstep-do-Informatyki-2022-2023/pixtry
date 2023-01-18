@@ -112,7 +112,8 @@ class World():
         self.tile_list = []
 
         # load images
-        dirt_img = pygame.image.load('img/ground.png')
+        dirt_img = pygame.image.load('img/brown_dirt.png')
+        floor_img = pygame.image.load('img/black.png')
         platform_img = pygame.image.load('img/platform.png')
 
         row_count = 0
@@ -152,6 +153,13 @@ class World():
                 elif tile == 8:  # play flappy
                     flappyDoor = interactions.FlappyDoor(col_count * tile_size, row_count * tile_size)
                     flappyDoor_group.add(flappyDoor)
+                elif tile == 9:  # floor
+                    img = pygame.transform.scale(floor_img, (tile_size, tile_size))
+                    img_rect = img.get_rect()
+                    img_rect.x = col_count * tile_size
+                    img_rect.y = row_count * tile_size
+                    tile = (img, img_rect)
+                    self.tile_list.append(tile)
                 col_count += 1
             row_count += 1
 
@@ -288,7 +296,7 @@ while run:
     clock.tick(fps)
     screen.fill('black')
     if mainMenu:  # main menu
-        draw_text('All saints of me', fontMenu, 'white', screen_width // 2, 0)
+        draw_text('All saints of me', fontMenu, 'white', screen_width // 2, 70)
         if newGameButton.draw():
             room = 0
             world_data = []
@@ -306,7 +314,7 @@ while run:
             run = False
     elif not mainMenu and inventory:  # el. in inventory
         if len(player.eq) == 0:
-            draw_text("You don't have anything in your inventory", font, 'white', screen_width // 2,
+            draw_text("Your inventory is empty", font, 'white', screen_width // 2,
                       screen_height // 2 - 100)
         else:
             for i in player.eq:
