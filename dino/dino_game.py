@@ -5,6 +5,7 @@ import math
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))  # 1280x720
 
+
 character = pygame.image.load('dino/graphics/psychopath_derek.png').convert_alpha()  # 520x730
 character = pygame.transform.scale(character, (120, 170))  # 120x170
 background_graveyard_1 = pygame.image.load('dino/graphics/background_1.png').convert_alpha()  # 1863x455
@@ -16,11 +17,12 @@ grave_2 = pygame.image.load('dino/graphics/grave.png').convert_alpha()  # 800x84
 grave_2 = pygame.transform.scale(grave_2, (100, 105))
 background = pygame.Surface((1280, 720))
 background.fill('grey')
+font_game = pygame.font.Font("dino/font/Pixeltype.ttf", 72)
 game_clock = pygame.time.Clock()
 
 background_x_coord = 0  # always 0
 ground_x_coord = 0  # always 0
-game_speed = 12
+game_speed = 0
 
 grave_x_coord = 1300
 grave_y_coord = 650
@@ -39,8 +41,20 @@ player_acceleration = 2 * player_y_coord_change_base / jump_len
 spawn_countdown = 0
 radius = 45
 
+score = 0
+did_win = 0
+did_lose = 0
+points_to_win = 50
+
+
+def draw_text(text, font, text_color, x, y):
+    img = font.render(text, True, text_color)
+    img_rect = img.get_rect(midtop=(x, y))
+    screen.blit(img, img_rect)
+
 
 def spawn_grave():
+
     grave_list.append(randint(1200, 1600))
 
 
@@ -85,9 +99,10 @@ def detect_grave_collision(grave_list_inner):
         for grave_list_x_coord in grave_list_inner:
             return grave_collision(player_y_coord, grave_list_x_coord + 55, )
 
+
 def main():
-    #had to add to global, thanks that game is running in MAIN
-    global background_x_coord, ground_x_coord, player_y_coord, game_speed, spawn_countdown, grave_list, jump, jump_count_down, player_y_coord_change
+    # had to add to global, thanks that game is running in MAIN
+    global background_x_coord, ground_x_coord, player_y_coord, game_speed, spawn_countdown, grave_list, jump, jump_count_down, player_y_coord_change, score, did_lose, did_win
 
     while True:
         for event in pygame.event.get():
@@ -98,6 +113,9 @@ def main():
                     return
 
         keys = pygame.key.get_pressed()
+        if score >= points_to_win:
+            did_win = 1
+
         screen.blit(background, (0, 0))
 
         background_graveyard_1_rect = background_graveyard_1.get_rect(bottomleft=(background_x_coord, 720))
@@ -115,6 +133,27 @@ def main():
         character_rect = character.get_rect(bottomleft=(100, player_y_coord))
         screen.blit(character, character_rect)
 
+        draw_text("Score: "+str(score), font_game, 'black', 120, 30)
+
+        if game_speed == 0:
+            if did_lose and did_win:
+                draw_text("Congrats you won!!! Your score is: "+str(score), font_game, 'black', 600, 200)
+                pygame.display.update()
+                pygame.time.wait(5000)
+                return
+            if did_lose == 1:
+                score = 0
+                did_lose = 0
+                spawn_countdown = 0
+                ground_x_coord = 0
+                background_x_coord = 0
+
+            draw_text("Score "+str(points_to_win)+" points to pass", font_game, 'black', 600, 200)
+            pygame.display.update()
+            pygame.time.wait(3000)
+            grave_list = []
+            game_speed = 12
+
         # move of graves and tree background
         background_x_coord -= game_speed
         ground_x_coord -= game_speed
@@ -126,13 +165,17 @@ def main():
 
         if spawn_countdown % 60 == 0 and game_speed != 0:
             spawn_grave()
+            score += 1
 
         spawn_countdown += 1
 
         show_grave(grave_list)
         grave_list = grave_move(grave_list)
         if detect_grave_collision(grave_list):
+            if not did_win:
+                pygame.time.wait(800)
             game_speed = 0
+            did_lose = 1
         # jump
         if keys[pygame.K_SPACE] and game_speed != 0:
             jump = 1
@@ -156,4 +199,6 @@ def main():
 
         pygame.display.update()
         game_clock.tick(60)
+
+
 main()
