@@ -49,7 +49,6 @@ def draw_grid():
 # to check what room we have
 def returnRoom(): return room
 
-
 # function to increment room
 def roomPP():
     global room
