@@ -58,7 +58,7 @@ def roomPP():
 
 # resetting room, to create new room
 def reset_room(room):
-    player.reset(80, screen_height - 130)
+    player.reset(80, screen_height - 160)
     door_group.empty()
     backdoor_group.empty()
     patientCard_group.empty()
@@ -121,7 +121,7 @@ class World():
             col_count = 0
             for tile in row:
                 tile = int(tile)
-                if tile == 1:  # floor
+                if tile == 1:  # dirt, the lowest part of floor
                     img = pygame.transform.scale(dirt_img, (tile_size, tile_size))
                     img_rect = img.get_rect()
                     img_rect.x = col_count * tile_size
@@ -153,7 +153,7 @@ class World():
                 elif tile == 8:  # play flappy
                     flappyDoor = interactions.FlappyDoor(col_count * tile_size, row_count * tile_size)
                     flappyDoor_group.add(flappyDoor)
-                elif tile == 9:  # floor
+                elif tile == 9:  # main floor
                     img = pygame.transform.scale(floor_img, (tile_size, tile_size))
                     img_rect = img.get_rect()
                     img_rect.x = col_count * tile_size
