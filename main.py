@@ -19,7 +19,7 @@ pygame.display.set_caption('All saints of me')
 # define game variables
 tile_size = 40
 room = 0
-max_room = 5
+max_room = 6
 mainMenu = True
 inventory = False
 
@@ -28,7 +28,7 @@ font = pygame.font.Font('font/Pixeltype.ttf', 72)
 fontMenu = pygame.font.Font('font/Pixeltype.ttf', 100)
 
 # load images
-bg_img = pygame.image.load('img/bg.png')
+bg_img = pygame.image.load('img/bk_img.png')
 
 
 # draw text
@@ -48,6 +48,7 @@ def draw_grid():
 
 # to check what room we have
 def returnRoom(): return room
+
 
 # function to increment room
 def roomPP():
