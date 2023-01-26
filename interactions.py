@@ -62,3 +62,17 @@ class FlappyDoor(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect()
 		self.rect.x = x
 		self.rect.y = y
+
+class Badges(pygame.sprite.Sprite):
+	def __init__(self, x, y, dir, b):
+		pygame.sprite.Sprite.__init__(self)
+		img = pygame.image.load(dir)
+		if b==1:
+			self.image=pygame.transform.scale(img, (tile_size*5, tile_size*5))
+		elif b==2:
+			self.image=pygame.transform.scale(img, (tile_size*10, tile_size*18))
+		elif b==3:
+			self.image=pygame.transform.scale(img, (tile_size*5, tile_size*5))
+		self.rect=self.image.get_rect()
+		self.rect.x=x
+		self.rect.y=y
