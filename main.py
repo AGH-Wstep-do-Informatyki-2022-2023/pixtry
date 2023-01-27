@@ -19,13 +19,20 @@ pygame.display.set_caption('All saints of me')
 # define game variables
 tile_size = 40
 room = 0
-max_room = 6
+max_room = 5
 mainMenu = True
 inventory = False
+
+#stupid variables, that could be just one variable, but i didn't add class for this, maybe some day after exams it will be added
+moveFloat=0 #to get text move
+moveFloatSokoban=0
+moveFLoatDino=0
+moveFloatFlappy=0
 
 # load font
 font = pygame.font.Font('font/Pixeltype.ttf', 72)
 fontMenu = pygame.font.Font('font/Pixeltype.ttf', 100)
+fontFloating = pygame.font.Font('font/Pixeltype.ttf', 48)
 
 # load images
 bg_img = pygame.image.load('img/bk_img.png')
@@ -36,7 +43,6 @@ def draw_text(text, font, text_color, x, y):
     img = font.render(text, True, text_color)
     img_rect = img.get_rect(midtop=(x, y))
     screen.blit(img, img_rect)
-
 
 # creating black lines (better to use than pixels)
 def draw_grid():
@@ -58,13 +64,14 @@ def roomPP():
 
 # resetting room, to create new room
 def reset_room(room):
-    player.reset(80, screen_height - 160)
+    player.reset(80, screen_height - 200)
     door_group.empty()
     backdoor_group.empty()
     patientCard_group.empty()
     sokobanDoor_group.empty()
     dinoDoor_group.empty()
     flappyDoor_group.empty()
+    badge_group.empty()
 
     # load in room and create world
     if path.exists(f'rooms/room_{room}'):
@@ -190,27 +197,33 @@ class Player():
             dx += 5
         if key[pygame.K_e] and pygame.sprite.spritecollide(self, door_group, False):
             if returnRoom() == 1 and 'Patient Card' not in self.eq:  # in room 1 we must find patient card
-                print('Get patient Card first')  # change it on later stage to text written on screen
+                draw_text('Get patient card first', font, 'black', screen_width // 2, screen_height // 2 )
             else:
                 nextRoom = 1
-                time.sleep(0.1)
+                time.sleep(0.125)
         if key[pygame.K_e] and pygame.sprite.spritecollide(self, backdoor_group, False):
             nextRoom = -1
-            time.sleep(0.1)
+            time.sleep(0.125)
         if key[pygame.K_e] and pygame.sprite.spritecollide(self, patientCard_group, False):
             self.eq.append('Patient Card')
             print('Collected Card')
             patientCard_group.empty()
         if key[pygame.K_e] and pygame.sprite.spritecollide(self, sokobanDoor_group, False):
             import sokoban.sokoban
+            self.eq.append('Sokoban badge')
+            print('Collected Sokoban badge')
             roomPP()
             reset_room(room)
         if key[pygame.K_e] and pygame.sprite.spritecollide(self, dinoDoor_group, False):
             import dino.dino_game
+            self.eq.append('Dino badge')
+            print('Collected Dino badge')
             roomPP()
             reset_room(room)
         if key[pygame.K_e] and pygame.sprite.spritecollide(self, flappyDoor_group, False):
             import flappy.flappyBird
+            self.eq.append('Flappy badge')
+            print('Collected Flappy badge')
             roomPP()
             reset_room(room)
 
@@ -242,9 +255,8 @@ class Player():
         self.rect.y += dy
 
         # making sure, that player won't disappear
-        if self.rect.bottom > screen_height - 40:
-            self.rect.bottom = screen_height - 40
-            dy = 0
+        if self.rect.top > screen_height+30:
+            self.rect.bottom = 0
         if self.rect.right >= 1280:
             self.rect.right = 1280
             dx = 0
@@ -259,7 +271,7 @@ class Player():
 
     def reset(self, x, y):
         img = pygame.image.load('img/guy.png')
-        self.image = pygame.transform.scale(img, (80, 160))
+        self.image = pygame.transform.scale(img, (80, 150))
         self.width = self.image.get_width()
         self.height = self.image.get_height()
         self.rect = self.image.get_rect()
@@ -278,6 +290,7 @@ patientCard_group = pygame.sprite.Group()
 sokobanDoor_group = pygame.sprite.Group()
 dinoDoor_group = pygame.sprite.Group()
 flappyDoor_group = pygame.sprite.Group()
+badge_group = pygame.sprite.Group()
 
 # loading room from file
 if path.exists(f'rooms/room_{room}'):
@@ -304,6 +317,7 @@ while run:
             nextRoom = 0
             mainMenu = False
             inventory = False
+            player.eq.clear()
         if continueGameButton.draw():
             mainMenu = False
             inventory = False
@@ -317,8 +331,8 @@ while run:
             draw_text("Your inventory is empty", font, 'white', screen_width // 2,
                       screen_height // 2 - 100)
         else:
-            for i in player.eq:
-                if i == 'Patient Card':
+            #for i in player.eq:
+                if 'Patient Card' in player.eq:
                     patientCardButton = Button('Patient Card', font, 'white', screen_width // 2, 0)
                     if patientCardButton.draw():
                         pCard = interactions.PatientCard(10 * tile_size, 0, 2)
@@ -326,6 +340,30 @@ while run:
                         patientCard_group.draw(screen)
                     else:
                         patientCard_group.empty()
+                if 'Sokoban badge' in player.eq:
+                    sBadgeButton = Button('Sokoban badge', font, 'white', screen_width // 2, 3*tile_size)
+                    if sBadgeButton.draw():
+                        sBadge = interactions.Badges(14 * tile_size, screen_height//2 - tile_size, 'sokoban/player.png', 1)
+                        badge_group.add(sBadge)
+                        badge_group.draw(screen)
+                    else:
+                        badge_group.empty()
+                if 'Dino badge' in player.eq:
+                    dBadgeButton = Button('Dino badge', font, 'white', screen_width // 2, 6 * tile_size)
+                    if dBadgeButton.draw():
+                        dBadge = interactions.Badges(11 * tile_size, 0, 'dino/graphics/psychopath_derek.png', 2)
+                        badge_group.add(dBadge)
+                        badge_group.draw(screen)
+                    else:
+                        badge_group.empty()
+                if 'Flappy badge' in player.eq:
+                    fBadgeButton = Button('Flappy badge', font, 'white', screen_width // 2, 9 * tile_size)
+                    if fBadgeButton.draw():
+                        fBadge = interactions.Badges(14 * tile_size , screen_height//2 - tile_size, 'flappy/grafika/bird.png', 3)
+                        badge_group.add(fBadge)
+                        badge_group.draw(screen)
+                    else:
+                        badge_group.empty()
             # here put other things, that you created
     else:
         # displaying everything
@@ -337,7 +375,27 @@ while run:
         sokobanDoor_group.draw(screen)
         dinoDoor_group.draw(screen)
         flappyDoor_group.draw(screen)
+        badge_group.draw(screen)
         nextRoom = player.update()
+
+        #code below is very poor and can be rewritten much better
+        if returnRoom()==0:
+            draw_text('Arrow - walk, Space - jump,  E - interact', font, 'black', screen_width // 2, screen_height // 2 - 3*tile_size)
+        elif returnRoom()==1 and len(player.eq)==1 and moveFloat<=screen_height//2:
+            draw_text('Collected Card', font, 'black', screen_width // 2, screen_height // 2 - moveFloat)
+            moveFloat+=3
+        elif returnRoom()==3 and moveFloatSokoban<=screen_height//2:
+            draw_text('Collected Sokoban badge', font, 'black', screen_width // 2, screen_height // 2 - moveFloatSokoban)
+            moveFloatSokoban+=3
+        elif returnRoom()==4 and moveFLoatDino<=screen_height//2:
+            draw_text('Collected Dino badge', font, 'black', screen_width // 2, screen_height // 2 - moveFLoatDino)
+            moveFLoatDino+=3
+        elif returnRoom()==5 and moveFloatFlappy<=screen_height//2:
+            draw_text('Collected Flappy Badge', font, 'black', screen_width // 2, screen_height // 2 - moveFloatFlappy)
+            moveFloatFlappy+=3
+        if returnRoom()==5:
+            draw_text('Check your inventory, there are some cool badges', font, 'black', screen_width // 2, screen_height // 2 - 3*tile_size)
+
 
         # setting new room
         if nextRoom == 1:
@@ -350,8 +408,14 @@ while run:
                 world_data = []
                 world = reset_room(room)
                 nextRoom = 0
-            else:
-                quit('Not working')  # yet
+            else: #if player finishes playing
+                screen.fill('black')
+                draw_text('Game Over', fontMenu, 'white', screen_width // 2, screen_height // 2 - 100)
+                draw_text('Thanks for playing', font, 'white', screen_width // 2, screen_height // 2 + 50)
+                pygame.display.update()
+                time.sleep(5)
+                mainMenu=True
+                reset_room(0)
         elif nextRoom == -1:
             prev_room = room
             room -= 1
@@ -361,7 +425,7 @@ while run:
                 world = reset_room(room)
                 nextRoom = 0
 
-    # draw_grid() #you can comment it to remove those black lines
+    #draw_grid() #you can comment it to remove those black lines
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
